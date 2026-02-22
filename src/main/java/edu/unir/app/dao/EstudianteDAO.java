@@ -17,8 +17,7 @@ public class EstudianteDAO {
             VALUES (?, ?, ?, ?, ?, ?, ?)
         """;
 
-        try (Connection cn = DBConnection.getConnection();
-             PreparedStatement ps = cn.prepareStatement(sql)) {
+        try (Connection cn = DBConnection.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
 
             ps.setString(1, e.getDocumento());
             ps.setString(2, e.getNombres());
@@ -55,9 +54,7 @@ public class EstudianteDAO {
 
         List<Estudiante> estudiantes = new ArrayList<>();
 
-        try (Connection cn = DBConnection.getConnection();
-             PreparedStatement ps = cn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        try (Connection cn = DBConnection.getConnection(); PreparedStatement ps = cn.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 estudiantes.add(mapRow(rs));
@@ -78,13 +75,14 @@ public class EstudianteDAO {
             WHERE id = ?
         """;
 
-        try (Connection cn = DBConnection.getConnection();
-             PreparedStatement ps = cn.prepareStatement(sql)) {
+        try (Connection cn = DBConnection.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
 
             ps.setInt(1, id);
 
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return mapRow(rs);
+                if (rs.next()) {
+                    return mapRow(rs);
+                }
                 return null;
             }
 
@@ -105,8 +103,7 @@ public class EstudianteDAO {
             WHERE id = ?
         """;
 
-        try (Connection cn = DBConnection.getConnection();
-             PreparedStatement ps = cn.prepareStatement(sql)) {
+        try (Connection cn = DBConnection.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
 
             ps.setString(1, e.getDocumento());
             ps.setString(2, e.getNombres());
@@ -140,8 +137,7 @@ public class EstudianteDAO {
     public void eliminarPorId(int id) throws DataAccessException {
         String sql = "DELETE FROM estudiante WHERE id = ?";
 
-        try (Connection cn = DBConnection.getConnection();
-             PreparedStatement ps = cn.prepareStatement(sql)) {
+        try (Connection cn = DBConnection.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
 
             ps.setInt(1, id);
 
@@ -170,5 +166,45 @@ public class EstudianteDAO {
 
         e.setActivo(rs.getBoolean("activo"));
         return e;
+    }
+
+    public Estudiante buscarPorDocumento(String documento) throws DataAccessException {
+        String sql = """
+        SELECT id, documento, nombres, apellidos, email, telefono, fecha_nacimiento, activo
+        FROM estudiante
+        WHERE documento = ?
+    """;
+
+        try (Connection cn = DBConnection.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
+
+            ps.setString(1, documento);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapRow(rs);
+                }
+                return null;
+            }
+
+        } catch (SQLException ex) {
+            throw new DataAccessException("Error buscando estudiante por documento.", ex);
+        }
+    }
+
+    public void desactivarPorId(int id) throws DataAccessException {
+        String sql = "UPDATE estudiante SET activo = FALSE WHERE id = ?";
+
+        try (Connection cn = DBConnection.getConnection(); PreparedStatement ps = cn.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+            int filas = ps.executeUpdate();
+
+            if (filas == 0) {
+                throw new DataAccessException("No se desactivó: no existe estudiante con id=" + id);
+            }
+
+        } catch (SQLException ex) {
+            throw new DataAccessException("Error desactivando (borrado lógico) estudiante.", ex);
+        }
     }
 }
