@@ -3,7 +3,7 @@
  */
 package edu.unir.app;
 
-import db.DBConnection;
+import edu.unir.app.db.DBConnection;
 import java.sql.Connection;
 
 /**
